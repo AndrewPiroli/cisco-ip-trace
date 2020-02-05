@@ -7,20 +7,13 @@ from netmiko import ConnectHandler
 import re
 import getpass
 
-##########################################################################################################
-#
 #  Template and header for CSV
-#
-##########################################################################################################
+# TODO: FIXME: use native csv library
 
 csv_header = "Device IP,MAC Address,Switch,Port,Port Description,Interface Type,VLANs on port,Port MAC count\n"
 csv_line_template = '{},{},{},{},{},{},"{}",{}\n'
 
-##########################################################################################################
-#
 #  Define Global Regexs
-#
-##########################################################################################################
 ip_regex = re.compile(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
 subnet_regex = re.compile(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.")
 mac_regex = re.compile(r"[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}")
@@ -31,14 +24,6 @@ air_regex = re.compile(r"AIR-.*", re.MULTILINE)
 description_regex = re.compile(r"Description: (.*)", re.MULTILINE)
 access_vlan_regex = re.compile(r"switchport access vlan (\d*)", re.MULTILINE)
 
-
-##########################################################################################################
-#
-#  Get arguments from the command line
-#
-##########################################################################################################
-
-# determine if arguments were passed to the script and parse if so
 if len(sys.argv) > 1:
 
     parser = argparse.ArgumentParser()
@@ -83,7 +68,6 @@ if len(sys.argv) > 1:
     except:
         parser.print_help()
         sys.exit(0)
-# if no arguments parsed, run interactive prompts
 else:
     options = None
     network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
@@ -133,10 +117,6 @@ def GetMacFromIP(current_ip, core_router, username, password, current_vrf):
 
 def GetPortByMac(next_switch_conn, mac):
     """finds switch port from the MAC address"""
-    mac_found = False
-    multi_mac = False
-    match_is_cdp_neighbor = False
-
     # find the port number of the mac address
     show_mac_table = next_switch_conn.send_command(
         "show mac add add " + mac + " | inc " + mac, delay_factor=0.1
@@ -154,7 +134,6 @@ def GetPortByMac(next_switch_conn, mac):
     # if a mac is found, change from regex result to string
     if mac_port:
         mac_port = mac_port.group()
-
     return mac_port
 
 
