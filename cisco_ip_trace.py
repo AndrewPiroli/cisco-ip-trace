@@ -196,33 +196,27 @@ def trace_mac(mac, device_ip, switch_ip, username, password):
     return line
 
 
-def trace_ip_addr(ip):
+def trace_ip_addr(ip, options):
     """Trace the MAC address through switches"""
     # Get the MAC address from the core via ARP
     print("\nTracing " + ip + "...", end="")
     # if using script arguments
-    if options:
-        mac = get_mac_from_ip(
-            ip, options.core_switch, options.username, password, options.vrf
-        )
-    # if using prompts
-    else:
-        mac = get_mac_from_ip(ip, core_switch, username, password, vrf)
-
+    mac = get_mac_from_ip(
+        ip,
+        options["core_switch"],
+        options["username"],
+        options["password"],
+        options["vrf"],
+    )
     # If we can find the MAC start tracing
     if mac:
-        # print("MAC address "+mac+".. ", end ="")
-        # if using script arguments
-        if options:
-            line = trace_mac(mac, ip, options.core_switch, options.username, password)
-        # if using prompts
-        else:
-            line = trace_mac(mac, ip, core_switch, username, password)
+        line = trace_mac(
+            mac, ip, options["core_switch"], options["username"], options["password"]
+        )
     # otherwise move on to the next IP address
     else:
         print("MAC not found in ARP")
         line = line = "{},Not Found\n".format(ip)
-
     return line
 
 
@@ -307,7 +301,7 @@ def main():
         for ipaddress_ipcalc in ipaddress.ip_network(
             options["network_to_scan"], strict=False
         ).hosts():
-            line = trace_ip_addr(str(ipaddress_ipcalc))
+            line = trace_ip_addr(str(ipaddress_ipcalc), options)
             print(line)
             csv_file.write(line)
         csv_file.close()
