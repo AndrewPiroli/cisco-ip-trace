@@ -261,15 +261,19 @@ def main():
             "-v", action="store", dest="vrf", help="Optional VRF name", default=""
         )
         try:
-            options = parser.parse_args()
+            args = parser.parse_args()
+            options = {"network_to_scan":args.network_to_scan, "core_switch": args.core_switch, "username":args.username,"pass":args.password,"filename":args.filename}
+            if args.vrf:
+                options["vrf"] = args.vrf
         except:
             parser.print_help()
             sys.exit(0)
     else:
-        options = None
+        options = {}
         network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
         while not re.match(subnet_regex, network_to_scan):
             network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
+        options["network_to_scan"] = network_to_scan
         current_vrf = input(
             "Enter VRF for the IP. Press 'Enter' if you're not using VRFs: "
         )
@@ -277,6 +281,7 @@ def main():
             vrf = ""
         else:
             vrf = "vrf"
+        options["vrf"] = vrf
         core_switch = input(
             "Enter the IP address of the core router/switch that can ARP for the IP address to trace: "
         )
@@ -284,11 +289,15 @@ def main():
             core_switch = input(
                 "The entered value is not an IP address. Please re-enter the IP of the core router/switch: "
             )
+        options["core_switch"] = core_switch
         username = input("Username: ")
         password = getpass.getpass()
         filename = input(
-            "Enter a filename to save output as CSV (leave blank for no file output): "
+            "Enter a filename to save output as CSV: "
         )
+        options["username"] = username
+        options["password"] = password
+        options["filename"] = filename
     if options:
         if options.filename:
             csv_file = open(options.filename, "w")
@@ -299,25 +308,6 @@ def main():
                 line = trace_ip_addr(str(ipaddress_ipcalc))
                 print(line)
                 csv_file.write(line)
-    # if outputting to csv with prompts
-    elif filename:
-        csv_file = open(filename, "w")
-        csv_file.write(csv_header)
-        # Loop over each IP in the network and trace
-        for ipaddress_ipcalc in ipaddress.ip_network(
-            network_to_scan, strict=False
-        ).hosts():
-            line = trace_ip_addr(str(ipaddress_ipcalc))
-            print(csv_header + line)
-            csv_file.write(line)
-    # just print lines if not outputting to csv
-    else:
-        for ipaddress_ipcalc in ipaddress.ip_network(
-            network_to_scan, strict=False
-        ).hosts():
-            line = trace_ip_addr(str(ipaddress_ipcalc))
-            print(csv_header + line)
-
 
 if __name__ == "__main__":
     main()
