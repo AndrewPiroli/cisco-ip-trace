@@ -132,7 +132,7 @@ def GetMacFromIP(current_ip, core_router, username, password, current_vrf):
 
 
 def GetPortByMac(next_switch_conn, mac):
-	"""finds switch port from the MAC address"""
+    """finds switch port from the MAC address"""
     mac_found = False
     multi_mac = False
     match_is_cdp_neighbor = False
@@ -159,7 +159,7 @@ def GetPortByMac(next_switch_conn, mac):
 
 
 def GetCDPNeighbor(next_switch_conn, mac_port):
-	"""Checks for CDP Neightbor on switch port"""
+    """Checks for CDP Neightbor on switch port"""
     # Check for access point because we usually can't SSH into those
     show_cdp_nei = next_switch_conn.send_command(
         "show cdp nei " + mac_port + " det", delay_factor=0.1
@@ -175,9 +175,7 @@ def GetCDPNeighbor(next_switch_conn, mac_port):
     cdp_nei_ip = re.search(ip_regex, show_cdp_nei)
     if cdp_nei_ip:
         cdp_nei_ip = cdp_nei_ip.group()
-
     return cdp_nei_ip
-
 
 
 def GetInterfaceDescription(next_switch_conn, mac_port):
@@ -198,7 +196,7 @@ def GetInterfaceDescription(next_switch_conn, mac_port):
 
 
 def GetInterfaceMode(next_switch_conn, mac_port):
-	"""Returns whether the interface is trunk or access and VLANs"""
+    """Returns whether the interface is trunk or access and VLANs"""
     # check whether the interface is a trunk
     show_interface_trunk = next_switch_conn.send_command(
         "show interface trunk | inc " + mac_port, delay_factor=0.1
@@ -225,7 +223,7 @@ def GetInterfaceMode(next_switch_conn, mac_port):
 
 
 def GetMacCount(next_switch_conn, mac_port):
-	"""Returns count of MAC addressed on a port"""
+    """Returns count of MAC addressed on a port"""
     mac_port_macs = next_switch_conn.send_command(
         "show mac add int " + mac_port + "\n", delay_factor=0.1
     )
@@ -236,7 +234,7 @@ def GetMacCount(next_switch_conn, mac_port):
 
 
 def TraceMac(mac, device_ip, switch_ip, username, password):
-	"""Trace the MAC address through switches"""
+    """Trace the MAC address through switches"""
     # connect to switch
     next_switch_conn = ConnectHandler(
         device_type="cisco_ios", host=switch_ip, username=username, password=password
@@ -287,8 +285,9 @@ def TraceMac(mac, device_ip, switch_ip, username, password):
 
     return line
 
+
 def TraceIPAddress(ipaddress_ipcalc):
-	"""Trace the MAC address through switches"""
+    """Trace the MAC address through switches"""
     # Get the MAC address from the core via ARP
     ipaddress = str(ipaddress_ipcalc)
     print("\nTracing " + ipaddress + "...", end="")
@@ -318,7 +317,6 @@ def TraceIPAddress(ipaddress_ipcalc):
         line = line = "{},Not Found\n".format(ipaddress)
 
     return line
-
 
 
 def main():
