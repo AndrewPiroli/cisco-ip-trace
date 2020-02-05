@@ -262,7 +262,13 @@ def main():
         )
         try:
             args = parser.parse_args()
-            options = {"network_to_scan":args.network_to_scan, "core_switch": args.core_switch, "username":args.username,"pass":args.password,"filename":args.filename}
+            options = {
+                "network_to_scan": args.network_to_scan,
+                "core_switch": args.core_switch,
+                "username": args.username,
+                "pass": args.password,
+                "filename": args.filename,
+            }
             if args.vrf:
                 options["vrf"] = args.vrf
         except:
@@ -292,22 +298,20 @@ def main():
         options["core_switch"] = core_switch
         username = input("Username: ")
         password = getpass.getpass()
-        filename = input(
-            "Enter a filename to save output as CSV: "
-        )
+        filename = input("Enter a filename to save output as CSV: ")
         options["username"] = username
         options["password"] = password
         options["filename"] = filename
-    if options:
-        if options.filename:
-            csv_file = open(options.filename, "w")
-            csv_file.write(csv_header)
-            for ipaddress_ipcalc in ipaddress.ip_network(
-                options.network_to_scan, strict=False
-            ).hosts():
-                line = trace_ip_addr(str(ipaddress_ipcalc))
-                print(line)
-                csv_file.write(line)
+        csv_file = open(options["filename"], "w")
+        csv_file.write(csv_header)
+        for ipaddress_ipcalc in ipaddress.ip_network(
+            options["network_to_scan"], strict=False
+        ).hosts():
+            line = trace_ip_addr(str(ipaddress_ipcalc))
+            print(line)
+            csv_file.write(line)
+        csv_file.close()
+
 
 if __name__ == "__main__":
     main()
