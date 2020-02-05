@@ -24,75 +24,6 @@ air_regex = re.compile(r"AIR-.*", re.MULTILINE)
 description_regex = re.compile(r"Description: (.*)", re.MULTILINE)
 access_vlan_regex = re.compile(r"switchport access vlan (\d*)", re.MULTILINE)
 
-if len(sys.argv) > 1:
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "-n",
-        action="store",
-        dest="network_to_scan",
-        help="The network to scan in CIDR format example 192.168.10.0/24",
-        required=True,
-    )
-
-    parser.add_argument(
-        "-c",
-        action="store",
-        dest="core_switch",
-        help="The IP address of the core switch to start the scan from",
-        required=True,
-    )
-
-    parser.add_argument(
-        "-u",
-        action="store",
-        dest="username",
-        help="The username to connect with",
-        required=True,
-    )
-
-    parser.add_argument(
-        "-f",
-        action="store",
-        dest="filename",
-        help="The file to output results to",
-        required=True,
-    )
-
-    parser.add_argument(
-        "-v", action="store", dest="vrf", help="Optional VRF name", default=""
-    )
-    try:
-        options = parser.parse_args()
-    except:
-        parser.print_help()
-        sys.exit(0)
-else:
-    options = None
-    network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
-    while not re.match(subnet_regex, network_to_scan):
-        network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
-    current_vrf = input(
-        "Enter VRF for the IP. Press 'Enter' if you're not using VRFs: "
-    )
-    if current_vrf == "":
-        vrf = ""
-    else:
-        vrf = "vrf"
-    core_switch = input(
-        "Enter the IP address of the core router/switch that can ARP for the IP address to trace: "
-    )
-    while not re.match(ip_regex, core_switch):
-        core_switch = input(
-            "The entered value is not an IP address. Please re-enter the IP of the core router/switch: "
-        )
-    username = input("Username: ")
-    password = getpass.getpass()
-    filename = input(
-        "Enter a filename to save output as CSV (leave blank for no file output): "
-    )
-
 
 def GetMacFromIP(current_ip, core_router, username, password, current_vrf):
     """finds the MAC address of an IP address via ARP"""
@@ -299,12 +230,70 @@ def TraceIPAddress(ipaddress_ipcalc):
 
 
 def main():
-
-    # if using script arguments
+    if len(sys.argv) > 1:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "-n",
+            action="store",
+            dest="network_to_scan",
+            help="The network to scan in CIDR format example 192.168.10.0/24",
+            required=True,
+        )
+        parser.add_argument(
+            "-c",
+            action="store",
+            dest="core_switch",
+            help="The IP address of the core switch to start the scan from",
+            required=True,
+        )
+        parser.add_argument(
+            "-u",
+            action="store",
+            dest="username",
+            help="The username to connect with",
+            required=True,
+        )
+        parser.add_argument(
+            "-f",
+            action="store",
+            dest="filename",
+            help="The file to output results to",
+            required=True,
+        )
+        parser.add_argument(
+            "-v", action="store", dest="vrf", help="Optional VRF name", default=""
+        )
+        try:
+            options = parser.parse_args()
+        except:
+            parser.print_help()
+            sys.exit(0)
+    else:
+        options = None
+        network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
+        while not re.match(subnet_regex, network_to_scan):
+            network_to_scan = input("Enter target in CIDR notation (192.168.10.0/24): ")
+        current_vrf = input(
+            "Enter VRF for the IP. Press 'Enter' if you're not using VRFs: "
+        )
+        if current_vrf == "":
+            vrf = ""
+        else:
+            vrf = "vrf"
+        core_switch = input(
+            "Enter the IP address of the core router/switch that can ARP for the IP address to trace: "
+        )
+        while not re.match(ip_regex, core_switch):
+            core_switch = input(
+                "The entered value is not an IP address. Please re-enter the IP of the core router/switch: "
+            )
+        username = input("Username: ")
+        password = getpass.getpass()
+        filename = input(
+            "Enter a filename to save output as CSV (leave blank for no file output): "
+        )
     if options:
-        # if outputting to csv with arguments
         if options.filename:
-            # Open the CSV and print the header
             csv_file = open(options.filename, "w")
             csv_file.write(csv_header)
             for ipaddress_ipcalc in ipcalc.Network(options.network_to_scan):
@@ -327,4 +316,5 @@ def main():
             print(csv_header + line)
 
 
-main()
+if __name__ == "__main__":
+    main()
