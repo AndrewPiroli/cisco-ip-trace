@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import ipcalc
+import ipaddress
 import sys
 from netmiko import ConnectHandler
 import re
@@ -196,35 +196,32 @@ def trace_mac(mac, device_ip, switch_ip, username, password):
     return line
 
 
-def trace_ip_addr(ipaddress_ipcalc):
+def trace_ip_addr(ip):
     """Trace the MAC address through switches"""
     # Get the MAC address from the core via ARP
-    ipaddress = str(ipaddress_ipcalc)
-    print("\nTracing " + ipaddress + "...", end="")
+    print("\nTracing " + ip + "...", end="")
     # if using script arguments
     if options:
         mac = get_mac_from_ip(
-            ipaddress, options.core_switch, options.username, password, options.vrf
+            ip, options.core_switch, options.username, password, options.vrf
         )
     # if using prompts
     else:
-        mac = get_mac_from_ip(ipaddress, core_switch, username, password, vrf)
+        mac = get_mac_from_ip(ip, core_switch, username, password, vrf)
 
     # If we can find the MAC start tracing
     if mac:
         # print("MAC address "+mac+".. ", end ="")
         # if using script arguments
         if options:
-            line = trace_mac(
-                mac, ipaddress, options.core_switch, options.username, password
-            )
+            line = trace_mac(mac, ip, options.core_switch, options.username, password)
         # if using prompts
         else:
-            line = trace_mac(mac, ipaddress, core_switch, username, password)
+            line = trace_mac(mac, ip, core_switch, username, password)
     # otherwise move on to the next IP address
     else:
         print("MAC not found in ARP")
-        line = line = "{},Not Found\n".format(ipaddress)
+        line = line = "{},Not Found\n".format(ip)
 
     return line
 
@@ -296,8 +293,10 @@ def main():
         if options.filename:
             csv_file = open(options.filename, "w")
             csv_file.write(csv_header)
-            for ipaddress_ipcalc in ipcalc.Network(options.network_to_scan):
-                line = trace_ip_addr(ipaddress_ipcalc)
+            for ipaddress_ipcalc in ipaddress.ip_network(
+                options.network_to_scan, strict=False
+            ).hosts():
+                line = trace_ip_addr(str(ipaddress_ipcalc))
                 print(line)
                 csv_file.write(line)
     # if outputting to csv with prompts
@@ -305,14 +304,18 @@ def main():
         csv_file = open(filename, "w")
         csv_file.write(csv_header)
         # Loop over each IP in the network and trace
-        for ipaddress_ipcalc in ipcalc.Network(network_to_scan):
-            line = trace_ip_addr(ipaddress_ipcalc)
+        for ipaddress_ipcalc in ipaddress.ip_network(
+            network_to_scan, strict=False
+        ).hosts():
+            line = trace_ip_addr(str(ipaddress_ipcalc))
             print(csv_header + line)
             csv_file.write(line)
     # just print lines if not outputting to csv
     else:
-        for ipaddress_ipcalc in ipcalc.Network(network_to_scan):
-            line = trace_ip_addr(ipaddress_ipcalc)
+        for ipaddress_ipcalc in ipaddress.ip_network(
+            network_to_scan, strict=False
+        ).hosts():
+            line = trace_ip_addr(str(ipaddress_ipcalc))
             print(csv_header + line)
 
 

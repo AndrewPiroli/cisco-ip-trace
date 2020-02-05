@@ -46,7 +46,7 @@ Device IP,MAC Address,Switch,Port,Port Description,Interface Type,VLANs on port,
 
 -Python3.x
 
--Python modules 'netmiko', 'ipcalc', and 'argparse'
+-Python modules 'netmiko'
 
 -SSH access to all Cisco devices from the computer running the script; Telnet is **not supported**
 
