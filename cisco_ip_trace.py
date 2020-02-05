@@ -25,7 +25,7 @@ description_regex = re.compile(r"Description: (.*)", re.MULTILINE)
 access_vlan_regex = re.compile(r"switchport access vlan (\d*)", re.MULTILINE)
 
 
-def GetMacFromIP(current_ip, core_router, username, password, current_vrf):
+def get_mac_from_ip(current_ip, core_router, username, password, current_vrf):
     """finds the MAC address of an IP address via ARP"""
     core_router_conn = ConnectHandler(
         device_type="cisco_ios", host=core_router, username=username, password=password
@@ -46,7 +46,7 @@ def GetMacFromIP(current_ip, core_router, username, password, current_vrf):
         return False
 
 
-def GetPortByMac(next_switch_conn, mac):
+def get_port_by_mac(next_switch_conn, mac):
     """finds switch port from the MAC address"""
     # find the port number of the mac address
     show_mac_table = next_switch_conn.send_command(
@@ -68,7 +68,7 @@ def GetPortByMac(next_switch_conn, mac):
     return mac_port
 
 
-def GetCDPNeighbor(next_switch_conn, mac_port):
+def get_cdp_nei(next_switch_conn, mac_port):
     """Checks for CDP Neightbor on switch port"""
     # Check for access point because we usually can't SSH into those
     show_cdp_nei = next_switch_conn.send_command(
@@ -88,7 +88,7 @@ def GetCDPNeighbor(next_switch_conn, mac_port):
     return cdp_nei_ip
 
 
-def GetInterfaceDescription(next_switch_conn, mac_port):
+def get_interface_description(next_switch_conn, mac_port):
     """Returns description of interface as a string"""
     interface_description = ""
 
@@ -105,7 +105,7 @@ def GetInterfaceDescription(next_switch_conn, mac_port):
     return interface_description
 
 
-def GetInterfaceMode(next_switch_conn, mac_port):
+def get_interface_mode(next_switch_conn, mac_port):
     """Returns whether the interface is trunk or access and VLANs"""
     # check whether the interface is a trunk
     show_interface_trunk = next_switch_conn.send_command(
@@ -132,7 +132,7 @@ def GetInterfaceMode(next_switch_conn, mac_port):
     return interface_type, vlans
 
 
-def GetMacCount(next_switch_conn, mac_port):
+def get_mac_count(next_switch_conn, mac_port):
     """Returns count of MAC addressed on a port"""
     mac_port_macs = next_switch_conn.send_command(
         "show mac add int " + mac_port + "\n", delay_factor=0.1
@@ -143,7 +143,7 @@ def GetMacCount(next_switch_conn, mac_port):
     return len(multi_macs)
 
 
-def TraceMac(mac, device_ip, switch_ip, username, password):
+def trace_mac(mac, device_ip, switch_ip, username, password):
     """Trace the MAC address through switches"""
     # connect to switch
     next_switch_conn = ConnectHandler(
@@ -153,7 +153,7 @@ def TraceMac(mac, device_ip, switch_ip, username, password):
     next_switch_conn.enable()
 
     # Find port that has MAC address
-    port = GetPortByMac(next_switch_conn, mac)
+    port = get_port_by_mac(next_switch_conn, mac)
     # No port found, return
     if not port:
         next_switch_conn.disconnect()
@@ -166,9 +166,9 @@ def TraceMac(mac, device_ip, switch_ip, username, password):
     # print("Switch {} port {}.. ".format(next_switch_hostname, port), end ="")
 
     # See if port is another Cisco device, if it is, start tracing on that switch
-    cdp_nei_ip = GetCDPNeighbor(next_switch_conn, port)
+    cdp_nei_ip = get_cdp_nei(next_switch_conn, port)
     if cdp_nei_ip:
-        line = TraceMac(mac, device_ip, cdp_nei_ip, username, password)
+        line = trace_mac(mac, device_ip, cdp_nei_ip, username, password)
 
     # Build line to print
     else:
@@ -176,9 +176,9 @@ def TraceMac(mac, device_ip, switch_ip, username, password):
         print("complete!\n")
 
         # Gather intformation on the final port
-        description = GetInterfaceDescription(next_switch_conn, port)
-        interface_type, vlans = GetInterfaceMode(next_switch_conn, port)
-        mac_count = GetMacCount(next_switch_conn, port)
+        description = get_interface_description(next_switch_conn, port)
+        interface_type, vlans = get_interface_mode(next_switch_conn, port)
+        mac_count = get_mac_count(next_switch_conn, port)
 
         line = csv_line_template.format(
             device_ip,
@@ -196,31 +196,31 @@ def TraceMac(mac, device_ip, switch_ip, username, password):
     return line
 
 
-def TraceIPAddress(ipaddress_ipcalc):
+def trace_ip_addr(ipaddress_ipcalc):
     """Trace the MAC address through switches"""
     # Get the MAC address from the core via ARP
     ipaddress = str(ipaddress_ipcalc)
     print("\nTracing " + ipaddress + "...", end="")
     # if using script arguments
     if options:
-        mac = GetMacFromIP(
+        mac = get_mac_from_ip(
             ipaddress, options.core_switch, options.username, password, options.vrf
         )
     # if using prompts
     else:
-        mac = GetMacFromIP(ipaddress, core_switch, username, password, vrf)
+        mac = get_mac_from_ip(ipaddress, core_switch, username, password, vrf)
 
     # If we can find the MAC start tracing
     if mac:
         # print("MAC address "+mac+".. ", end ="")
         # if using script arguments
         if options:
-            line = TraceMac(
+            line = trace_mac(
                 mac, ipaddress, options.core_switch, options.username, password
             )
         # if using prompts
         else:
-            line = TraceMac(mac, ipaddress, core_switch, username, password)
+            line = trace_mac(mac, ipaddress, core_switch, username, password)
     # otherwise move on to the next IP address
     else:
         print("MAC not found in ARP")
@@ -297,7 +297,7 @@ def main():
             csv_file = open(options.filename, "w")
             csv_file.write(csv_header)
             for ipaddress_ipcalc in ipcalc.Network(options.network_to_scan):
-                line = TraceIPAddress(ipaddress_ipcalc)
+                line = trace_ip_addr(ipaddress_ipcalc)
                 print(line)
                 csv_file.write(line)
     # if outputting to csv with prompts
@@ -306,13 +306,13 @@ def main():
         csv_file.write(csv_header)
         # Loop over each IP in the network and trace
         for ipaddress_ipcalc in ipcalc.Network(network_to_scan):
-            line = TraceIPAddress(ipaddress_ipcalc)
+            line = trace_ip_addr(ipaddress_ipcalc)
             print(csv_header + line)
             csv_file.write(line)
     # just print lines if not outputting to csv
     else:
         for ipaddress_ipcalc in ipcalc.Network(network_to_scan):
-            line = TraceIPAddress(ipaddress_ipcalc)
+            line = trace_ip_addr(ipaddress_ipcalc)
             print(csv_header + line)
 
 
