@@ -7,6 +7,11 @@ from netmiko import ConnectHandler
 import re
 import getpass
 
+# FIXME: remove after testing
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 #  Template and header for CSV
 # TODO: FIXME: use native csv library
 
@@ -262,6 +267,7 @@ def main():
                 "username": args.username,
                 "pass": args.password,
                 "filename": args.filename,
+                "vrf": "",
             }
             if args.vrf:
                 options["vrf"] = args.vrf
