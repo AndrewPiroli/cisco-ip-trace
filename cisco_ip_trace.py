@@ -306,7 +306,7 @@ def main():
     csv_file.write(csv_header)
     for ipaddress_ipcalc in ipaddress.ip_network(
         options["network_to_scan"], strict=False
-    ).hosts():
+    ):
         line = trace_ip_addr(str(ipaddress_ipcalc), options)
         print(line)
         csv_file.write(line)
